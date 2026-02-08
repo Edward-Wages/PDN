@@ -12,6 +12,18 @@
     Remember to make it parallelized!
 */ // ------------------------------------------------------ //
 
+void parse_csv(FILE* file, long int* matrix, int n_row, int n_col)
+{
+    for(int i = 0; i < n_row; i++)
+    {
+        for( int j = 0; j < n_col; j++)
+        {
+            fscanf(file, "%d,", &matrix[i * n_col + j]); //Reads the matrix file & inserts into it's allocated space
+        }
+
+    }
+}
+
 int main(int argc, char* argv[])
 {
     // Catch console errors
@@ -46,15 +58,34 @@ int main(int argc, char* argv[])
 
     // TODO: malloc the two input matrices and the output matrix
     // Please use long int as the variable type
+    long int *matrix1 = malloc(n_row1 * n_col1 * sizeof(long int));
+    long int *matrix2 = malloc(n_row2 * n_col2 * sizeof(long int));
+    long int *resultMatrix = malloc(n_row1 * n_col2 * sizeof(long int));
+    //Resulting matrix needs to be of size n_row1 x n_col2
 
     // TODO: Parse the input csv files and fill in the input matrices
-
+    parse_csv(inputMatrix1, matrix1, n_row1, n_col1);
+    parse_csv(inputMatrix2, matrix2, n_row2, n_col2);
 
     // We are interesting in timing the matrix-matrix multiplication only
     // Record the start time
     double start = omp_get_wtime();
     
     // TODO: Parallelize the matrix-matrix multiplication
+    //We'll have 3 loops. the outer most will be parallelized. Each thread wil be responsible for calculating a number of rows in the result matrix.
+    // Check to see if this actually works
+    #pragma omp parallel for num_threads(thread_count)
+    for(int i = 0; i < n_row1; i++)
+    {
+        for(int j = 0; j < n_col2; j++)
+        {
+            resultMatrix[i * n_col2 + j] = 0; //Initializing the space
+            for(int k = 0; k < n_col1; k++)
+            {
+                resultMatrix[i * n_col2 + j] += matrix1[i * n_col1 + k] * matrix2[k * n_col2 + j]; //Calculating the value for this cell
+            }
+        }
+    }
 
     // Record the finish time        
     double end = omp_get_wtime();
@@ -66,6 +97,26 @@ int main(int argc, char* argv[])
     fprintf(outputTime, "%f", time_passed);
 
     // TODO: save the output matrix to the output csv file
+    //the output file variable is outputFile - Editor's note - It might be handy to put in newlines after each row so you can actually read the file
+    //Just a thought
+    for(int i = 0; i < n_row1; i++)
+    {
+        for( int j = 0; j < n_col2; j++)
+        {
+            //Need to add the commas so that it's actually a csv
+            fprintf(outputFile, "%d", resultMatrix[i * n_col2 + j]); //Writes each value to the file
+            if (j != n_col2 - 1)
+            {
+                fprintf(outputFile, ","); 
+            }
+        }
+
+        //Newline after each row EXCEPT the last so it stay's at 1000 lines - Will need to do the same thing with the leftover comma on each line
+        if(i != n_row1 - 1)
+        {
+            fprintf(outputFile, "\n"); //Newline after each row
+        }
+    }
 
     // Cleanup
     fclose(inputMatrix1);
@@ -73,6 +124,9 @@ int main(int argc, char* argv[])
     fclose(outputFile);
     fclose(outputTime);
     // Remember to free your buffers!
+    free(matrix1);
+    free(matrix2);
+    free(resultMatrix);
 
     return 0;
 }
