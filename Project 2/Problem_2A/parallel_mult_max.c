@@ -75,15 +75,29 @@ int main(int argc, char* argv[])
     // TODO: Parallelize the matrix-matrix multiplication
     //We'll have 3 loops. the outer most will be parallelized. Each thread wil be responsible for calculating a number of rows in the result matrix.
     // Check to see if this actually works
-    #pragma omp parallel for num_threads(thread_count)
+
+    /*NEW TODO: 
+        Please implement a parallel program to find the maximum value in the output matrix from a matrix-matrix multiplication. 
+        To save memory, you cannot compute and store the entire output matrix in the memory and then search for the maximum from 
+        the completed output matrix. Instead, you need to find the maximum as each element in the output matrix is computed
+    */
+    long int global_max = 0; //This will hold the global max value. It will need shared access by all threads so we initialize it outside the parallel region
+    #pragma omp parallel for num_threads(thread_count) reduction(max: global_max) 
     for(int i = 0; i < n_row1; i++)
     {
         for(int j = 0; j < n_col2; j++)
         {
+            long int current = 0;
             resultMatrix[i * n_col2 + j] = 0; //Initializing the space
             for(int k = 0; k < n_col1; k++)
             {
-                resultMatrix[i * n_col2 + j] += matrix1[i * n_col1 + k] * matrix2[k * n_col2 + j]; //Calculating the value for this cell
+                current += matrix1[i * n_col1 + k] * matrix2[k * n_col2 + j]; //Calculate the result early so we can check if it's the max
+            }
+
+            resultMatrix[i * n_col2 + j] += current; //Assign the value
+            if(current > global_max)
+            {
+                global_max = current; //Update the local max
             }
         }
     }
