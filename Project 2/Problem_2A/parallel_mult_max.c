@@ -114,24 +114,9 @@ int main(int argc, char* argv[])
     // TODO: save the output matrix to the output csv file
     //the output file variable is outputFile - Editor's note - It might be handy to put in newlines after each row so you can actually read the file
     //Just a thought
-    for(int i = 0; i < n_row1; i++)
-    {
-        for( int j = 0; j < n_col2; j++)
-        {
-            //Need to add the commas so that it's actually a csv
-            fprintf(outputFile, "%d", resultMatrix[i * n_col2 + j]); //Writes each value to the file
-            if (j != n_col2 - 1)
-            {
-                fprintf(outputFile, ","); 
-            }
-        }
 
-        //Newline after each row EXCEPT the last so it stay's at 1000 lines - Will need to do the same thing with the leftover comma on each line
-        if(i != n_row1 - 1)
-        {
-            fprintf(outputFile, "\n"); //Newline after each row
-        }
-    }
+    //TODO: Print the global max to the output file.
+    fprintf(outputFile, "%d", global_max);
 
     // Cleanup
     fclose(inputMatrix1);

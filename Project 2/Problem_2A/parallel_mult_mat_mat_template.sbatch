@@ -10,7 +10,7 @@
 # Adjust time according to your needs and queue limit 
 #SBATCH --time=00:15:00
 #SBATCH --job-name=Project2_Problem1
-#SBATCH --mail-Edward.J.Wages-1@ou.edu
+#SBATCH --mail-user=Edward.J.Wages-1@ou.edu
 #SBATCH --mail-type=ALL
 
 #################################################
