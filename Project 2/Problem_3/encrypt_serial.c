@@ -71,6 +71,7 @@ int main (int argc, char *argv[])
     // Encrypt the buffer into the encrypted_buffer
     for (int i = 0; i<lSize; i++) {
         // encrypted_buffer[i] = ??? ;  // TODO: Encrypt a character from the input buffer.
+        encrypted_buffer[i] = (buffer[i] + key) % 26; //The given encrypiton formula is x + k mod 26
     }
     if (DEBUG) printf("Values encypted! \n");
 

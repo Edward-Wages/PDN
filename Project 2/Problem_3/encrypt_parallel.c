@@ -17,8 +17,9 @@ int main (int argc, char *argv[])
 {
     // Catch console errors
     //  Make sure you include the # of threads and your output time file.
-    if (argc != 4) {
-        printf("USE LIKE THIS: encrypt_serial key input_text.txt output_text.txt\n");
+    if (argc != 6) 
+    {
+        printf("USE LIKE THIS: encrypt_serial key input_text.txt output_text.txt num_threads output_time.txt\n");
         return EXIT_FAILURE;
     }
 
@@ -31,6 +32,10 @@ int main (int argc, char *argv[])
 
     // Open the output, encrypted text file
     FILE* outputFile = fopen(argv[3], "w");
+
+    int num_threads = atoi(argv[4]);
+
+    FILE* timeFile = fopen(argv[5], "w");
 
 
     // Allocate and open a buffer to read in the input
@@ -71,29 +76,34 @@ int main (int argc, char *argv[])
 
     /*
         Your program should 
-1.	Read in a key and the plain text.  - DONE 
-2.	Distribute the plain text amongst the threads used almost equally. - OpenMP?
-3.	Let each thread encrypt its portion in parallel.  
+1.	Read in a key and the plain text. - Done
+2.	Distribute the plain text amongst the threads used almost equally. - done by prama
+3.	Let each thread encrypt its portion in parallel.  - Done
 4.	Collates the encrypted text from every thread
 5.	Save the encrypted text to a file.
   
     */
 
+    double start_time = omp_get_wtime();
     // ----> Begin Encryption <----- //
     // Encrypt the buffer into the encrypted_buffer
+    #pragma omp parallel for num_threads(num_threads)
     for (int i = 0; i<lSize; i++) 
     {
         // encrypted_buffer[i] = ??? ;  // TODO: Encrypt a character from the input buffer.
-        encrypted_buffer[i] = (buffer[i] + key) % 26; //The given encrypiton formula is x + k mod 26
+        encrypted_buffer[i] = (unsigned char) ((buffer[i] + key) % 256);
     }
     if (DEBUG) printf("Values encypted! \n");
+
+    double end_time = omp_get_wtime();
+    double total_time = end_time - start_time;
+    fprintf(timeFile, "%f", total_time);
 
     // Print to the output file
     for (int i = 0; i<lSize; i++) 
     {
-        fprintf(outputFile, "%c", encrypted_buffer[i]);
+        fwrite(&encrypted_buffer[i], sizeof(unsigned char), 1, outputFile);
     }
-
 
 
     // Cleanup
