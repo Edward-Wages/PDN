@@ -109,7 +109,7 @@ int main (int argc, char *argv[])
     // Cleanup
     fclose(inputFile);
     fclose(outputFile);
-    // fclose(timeFile);
+    fclose(timeFile);
     free(encrypted_buffer);
     free(buffer);
 
