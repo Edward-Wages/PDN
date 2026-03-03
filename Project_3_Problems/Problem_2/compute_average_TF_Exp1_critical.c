@@ -12,7 +12,8 @@
 
 
 // Store gene-data here //
-struct Genes {
+struct Genes 
+{
     unsigned char* gene_sequences; // The gene-data
     int* gene_sizes;               // The gene lengths
     int  num_genes;                // The number of genes read in
@@ -23,7 +24,8 @@ struct Genes {
 
 // Read Genes -------------------------- //
 //      Reads in the gene-data from a file.
-struct Genes read_genes(FILE* inputFile) {
+struct Genes read_genes(FILE* inputFile) 
+{
 
     // return this
     struct Genes genes;
@@ -37,23 +39,27 @@ struct Genes read_genes(FILE* inputFile) {
 
     // Read in lines from the file while line exists
     int currentGeneIndex = 0;
-    while (fgets(line, MAX_LINE_LENGTH, inputFile)) {
+    while (fgets(line, MAX_LINE_LENGTH, inputFile)) 
+    {
 
         // If the line is empty, exit loop.
         //      This if statment helps avoid errors.
         //      (strcmp returns 0 for equal strings)
-        if (strcmp(line, "") == 0) {
+        if (strcmp(line, "") == 0) 
+        {
             break;
         }
 
         // If line is a DNA sequence:
         //      Read in the nucleotides in order into an array
-        else if (line[0] != '>') {
+        else if (line[0] != '>') 
+        {
 
             int line_len = strlen(line);
 
             //#pragma parallel for
-            for (int i = 0; i < line_len; ++i) {
+            for (int i = 0; i < line_len; ++i) 
+            {
                 char c = line[i];
                 if (c == 'A' || c == 'C' || c == 'G' || c == 'T') {
                     genes.gene_sequences[genes.num_genes * GENE_SIZE + currentGeneIndex] = c;  // put letter into gene
@@ -65,7 +71,8 @@ struct Genes read_genes(FILE* inputFile) {
 
         // If line is a header:
         //      Reset for another gene-pass.
-        else if (line[0] == '>') {
+        else if (line[0] == '>') 
+        {
             // indicate we have another gene to read in
             genes.gene_sizes[genes.num_genes] = currentGeneIndex;
             genes.num_genes += 1;
@@ -85,7 +92,7 @@ struct Genes read_genes(FILE* inputFile) {
 
 
 // Process Tetranucs ------------------------ //
-/* Input: A DNA sequence of length N for a gene
+/* Input: A DNA sequence of length N for a gene stored at gene_index in the genes array
     Output: The TF of this gene, which is an integer array of length 256
 
     For each i between 0 and N-4:
@@ -97,7 +104,7 @@ struct Genes read_genes(FILE* inputFile) {
 void process_tetranucs(struct Genes genes, int* gene_TF, int gene_index) 
 {
 
-    // TODO: process the current gene array (Copy from problem 2)
+    // TODO: process the current gene array
     for (int i = 0; i < genes.gene_sizes[gene_index] - 3; ++i)
     {
         // Get the substring from i to i+3 in the DNA sequence
@@ -140,44 +147,30 @@ void process_tetranucs(struct Genes genes, int* gene_TF, int gene_index)
 } // End Process Tetranucs //
 
 
-// Find Median ------------------------ //
-/* Find the median of an unsorted array */
-double find_median(int* freqs, int num_genes) 
-{
-
-    // TODO: sort the frequencies
-
-    // TODO: median if even
-    if (num_genes % 2 == 0)
-        return 2;
-
-    // TODO median if odd
-    else
-        return 1;
-
-} // End Find Median //
-
-
 
 // Main Program -------------------- //
 //      Processes the tetranucleotides.
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
     // Check for console errors
-    if (argc != 4) {
+    if (argc != 4) 
+    {
         printf("USE LIKE THIS:\ncompute_average_TF_Exp1 input.fna average_TF.csv time.csv\n");
         exit(-1);
     }
 
     // Get the input file
     FILE* inputFile = fopen(argv[1], "r");
-    if (inputFile == NULL) {
+    if (inputFile == NULL) 
+    {
         printf("ERROR: Could not open file %s!\n", argv[1]);
         exit(-2);
     }
 
     // Get the output file
     FILE* outputFile = fopen(argv[2], "w");
-    if (outputFile == NULL) {
+    if (outputFile == NULL) 
+    {
         printf("ERROR: Could not open file %s!\n", argv[2]);
         fclose(inputFile);
         exit(-3);
@@ -185,7 +178,8 @@ int main(int argc, char* argv[]) {
 
     // Get the time file
     FILE* timeFile = fopen(argv[3], "w");
-    if (outputFile == NULL) {
+    if (outputFile == NULL) 
+    {
         printf("ERROR: Could not open file %s!\n", argv[3]);
         fclose(inputFile);
         fclose(outputFile);
@@ -194,49 +188,52 @@ int main(int argc, char* argv[]) {
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
+    
     // Below is a data structure to help you access the gene-file's data:
     //      access gene like: genes.genes[gene_index*GENE_SIZE + char_index]
     //      access each gene's size like: genes.gene_sizes[gene_index]
     //      access the total number of genes like: genes.num_genes
     struct Genes genes = read_genes(inputFile);
 
-    // Store each gene's TF array here
-    int** gene_TF_counts = (int*)malloc(genes.num_genes * sizeof(int*));
+    // Total number of tetranucs
+    int* TF = (int*)calloc(NUM_TETRANUCS, sizeof(int));
 
     // Get the start time
     double start = omp_get_wtime();
+
     /*  1) Tetranuc computation
             For each gene in the list:
                 Compute this gene's TF
                 Add this gene's TF to the running total TF
+    */ 
 
-    */ // TODO: parallelize the computations for each gene for exp 1 and exp 2.
-    for (int gene_index = 0; gene_index < genes.num_genes; ++gene_index) {
-
+    //BUG HERE SOMEWHERE
+    // TODO: parallelize the computations for each gene.
+    #pragma omp parallel for
+    for (int gene_index = 0; gene_index < genes.num_genes; ++gene_index) 
+    {
         // Compute this gene's TF
         int* gene_TF = (int*)calloc(NUM_TETRANUCS, sizeof(int));
         process_tetranucs(genes, gene_TF, gene_index);
 
-        // Save to 2d array
-        gene_TF_counts[gene_index] = gene_TF;
+        // Race condition is right here. When creating the multiple solutions using different 
+        // sync methods, this will be what we are changing.
+        // Add this gene's TF to the running total TF
+        #pragma omp critical
+        {
+            for (int t = 0; t < NUM_TETRANUCS; ++t)
+            {
+                TF[t] += gene_TF[t];
+            }
+        }
+        free(gene_TF);
     }
 
 
-    // 2) Find the medians (as a double!)
-    // TODO: parallelize the computations for each median for exp 2 only
-    double* median_TF = (double*)calloc(NUM_TETRANUCS, sizeof(double));
-    for (int tet = 0; tet < NUM_TETRANUCS; ++tet) {
-        int num_genes = genes.num_genes;
-        
-        // save all frequencies of TF here
-        int* freqs = (int*)calloc(num_genes, sizeof(int));
-        for (int gene = 0; gene < num_genes; ++gene)
-            freqs[gene] = gene_TF_counts[gene][tet];
-
-        // find median frequency
-        median_TF[tet] = find_median(freqs, num_genes);
-        free(freqs);
-    }
+    // 2) Get the averages of each TF (as a double!) 
+    double* average_TF = (double*)malloc(NUM_TETRANUCS * sizeof(double));
+    for (int t = 0; t < NUM_TETRANUCS; ++t)
+        average_TF[t] = (double)TF[t] / (double)genes.num_genes;
 
 
     // Get the passed time
@@ -245,9 +242,10 @@ int main(int argc, char* argv[]) {
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
 
-    // Print the median tetranucs
-    for (int i = 0; i < NUM_TETRANUCS; ++i) {
-        fprintf(outputFile, "%f", median_TF[i]);
+    // Print the average tetranucs
+    for (int i = 0; i < NUM_TETRANUCS; ++i) 
+    {
+        fprintf(outputFile, "%f", average_TF[i]);
         if (i < NUM_TETRANUCS - 1) fprintf(outputFile, "\n");
     }
 
@@ -261,13 +259,9 @@ int main(int argc, char* argv[]) {
     fclose(inputFile);
     fclose(outputFile);
 
-    for (int g = 0; g < genes.num_genes; ++g)
-        free(gene_TF_counts[g]);
-    free(gene_TF_counts);
-
-    free(median_TF);
-    free(genes.gene_sizes);
+    free(TF);
     free(genes.gene_sequences);
+    free(genes.gene_sizes);
 
     // done
     return 0;
