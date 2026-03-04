@@ -14,7 +14,7 @@
 #
 # --------------------- Change the items below here! ---------------------
 #
-#SBATCH --mail-user=yourEmailHere@ou.edu
+#SBATCH --mail-user=Edward.J.Wages-1@ou.edu
 #SBATCH --mail-type=ALL
 #
 #SBATCH --chdir=/home/oucspdnxxx/ ... /Project_3/Problem_4

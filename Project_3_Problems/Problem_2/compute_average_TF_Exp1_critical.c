@@ -153,9 +153,9 @@ void process_tetranucs(struct Genes genes, int* gene_TF, int gene_index)
 int main(int argc, char* argv[]) 
 {
     // Check for console errors
-    if (argc != 4) 
+    if (argc != 5) 
     {
-        printf("USE LIKE THIS:\ncompute_average_TF_Exp1 input.fna average_TF.csv time.csv\n");
+        printf("USE LIKE THIS:\ncompute_average_TF_Exp1 input.fna average_TF.csv time.csv num_threads\n");
         exit(-1);
     }
 
@@ -186,6 +186,9 @@ int main(int argc, char* argv[])
         exit(-4);
     }
 
+        int num_threads = strtol(argv[4], NULL, 10);
+        omp_set_num_threads(num_threads);
+
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
     
@@ -209,7 +212,7 @@ int main(int argc, char* argv[])
 
     //BUG HERE SOMEWHERE
     // TODO: parallelize the computations for each gene.
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(num_threads)
     for (int gene_index = 0; gene_index < genes.num_genes; ++gene_index) 
     {
         // Compute this gene's TF

@@ -14,7 +14,7 @@
 #
 # --------------------- Change the items below here! ---------------------
 #
-#SBATCH --mail-user=yourEmailHere@ou.edu
+#SBATCH --mail-user=Edward.J.Wages-1@ou.edu
 #SBATCH --mail-type=ALL
 #
 #SBATCH --chdir=/home/oucspdnxxx/ ... /Project_3/Problem_2
@@ -25,3 +25,5 @@
 
 # make run <-- You can run commands from your makefile if you so wish.
 ./compute_average_TF_Exp1_starter in.fna OUTPUT_starter_1th.csv TIME_starter_1th.csv 1
+make all
+make run
