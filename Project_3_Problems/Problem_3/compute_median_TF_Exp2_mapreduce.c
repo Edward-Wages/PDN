@@ -220,23 +220,27 @@ double find_median(int* freqs, int num_genes)
 
 // Main Program -------------------- //
 //      Processes the tetranucleotides.
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
     // Check for console errors
-    if (argc != 4) {
-        printf("USE LIKE THIS:\ncompute_average_TF_Exp1 input.fna average_TF.csv time.csv\n");
+    if (argc != 5) 
+    {
+        printf("USE LIKE THIS:\ncompute_average_TF_Exp1 input.fna average_TF.csv time.csv num_threads\n");
         exit(-1);
     }
 
     // Get the input file
     FILE* inputFile = fopen(argv[1], "r");
-    if (inputFile == NULL) {
+    if (inputFile == NULL) 
+    {
         printf("ERROR: Could not open file %s!\n", argv[1]);
         exit(-2);
     }
 
     // Get the output file
     FILE* outputFile = fopen(argv[2], "w");
-    if (outputFile == NULL) {
+    if (outputFile == NULL) 
+    {
         printf("ERROR: Could not open file %s!\n", argv[2]);
         fclose(inputFile);
         exit(-3);
@@ -244,12 +248,16 @@ int main(int argc, char* argv[]) {
 
     // Get the time file
     FILE* timeFile = fopen(argv[3], "w");
-    if (outputFile == NULL) {
+    if (timeFile == NULL) 
+    {
         printf("ERROR: Could not open file %s!\n", argv[3]);
         fclose(inputFile);
         fclose(outputFile);
         exit(-4);
     }
+
+    int num_threads = strtol(argv[4], NULL, 10);
+    omp_set_num_threads(num_threads);
 
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ //
 
@@ -270,7 +278,7 @@ int main(int argc, char* argv[]) {
                 Add this gene's TF to the running total TF
 
     */ // TODO: parallelize the computations for each gene for exp 1 and exp 2.
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(num_threads)
     for (int gene_index = 0; gene_index < genes.num_genes; ++gene_index) 
     {
 
@@ -286,7 +294,7 @@ int main(int argc, char* argv[]) {
     // 2) Find the medians (as a double!)
     // TODO: parallelize the computations for each median for exp 2 only
     double* median_TF = (double*)calloc(NUM_TETRANUCS, sizeof(double));
-    #pragma omp parallel for
+    #pragma omp parallel for num_threads(num_threads)
     for (int tet = 0; tet < NUM_TETRANUCS; ++tet) 
     {
         int num_genes = genes.num_genes;
@@ -309,7 +317,8 @@ int main(int argc, char* argv[]) {
 
 
     // Print the median tetranucs
-    for (int i = 0; i < NUM_TETRANUCS; ++i) {
+    for (int i = 0; i < NUM_TETRANUCS; ++i) 
+    {
         fprintf(outputFile, "%f", median_TF[i]);
         if (i < NUM_TETRANUCS - 1) fprintf(outputFile, "\n");
     }
