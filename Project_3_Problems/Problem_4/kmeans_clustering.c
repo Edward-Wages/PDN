@@ -90,84 +90,98 @@ int main(int argc, char* argv[])
     3)	Compute the average moving distance by which all the centroids are moved in this iteration.
     */
 
-    // Allocate assignment array to track which centroid each point belongs to
-    int* assignments = malloc(num_points * sizeof(int));
 
-    // K-means clustering algorithm
+    /* PROJECT SPECIFICATIONS:
+    Second, please parallelize the two for loops as shown in the pseudo-code. Please follow the coding requirements below:
+     - In all the OpenMP parallel directives, please specify the variable scope clauses 
+     [i.e., default(none), shared(), private(), and reduction()]to explicitly declare the scope of every variable. 
+     The parallelization overhead can be used by using private() to create private copies of variables for every thread, 
+     instead of declaring private variables inside the parallel regions.
+
+     - Please use work sharing constructs to minimize the parallelization overhead of repeatedly forking and joining threads. 
+     You should use the omp parallel directive before the while loop and then use the omp for directives before the two for loops.
+     You may also need to use other work sharing directives, such as single and barrier.
+    
+    */
+
+    int* assignments = malloc(num_points * sizeof(int));
     bool converged = false;
-    while (!converged) 
+    double total_moving_dist;
+
+    #pragma omp parallel num_threads(num_threads) default(none) \
+        shared(points_x, points_y, centroids_x, centroids_y, assignments, \
+            num_points, num_centroids, converged, total_moving_dist)
     {
-        // Step 1: For every point, assign it to its nearest centroid
-        //Needs to be parallelized
-        #pragma omp parallel for num_threads(num_threads)
-        for (int p = 0; p < num_points; ++p) 
+        while (!converged) 
         {
-            double min_dist = DBL_MAX;
-            int nearest_centroid = 0;
-            
-            for (int c = 0; c < num_centroids; ++c) 
-            {
-                double dx = points_x[p] - centroids_x[c];
-                double dy = points_y[p] - centroids_y[c];
-                double dist = sqrt(dx*dx + dy*dy);
-                
-                if (dist < min_dist) 
-                {
-                    min_dist = dist;
-                    nearest_centroid = c;
-                }
-            }
-            assignments[p] = nearest_centroid;
-        }
-        
-        // Step 2: For every centroid, compute new location and moving distance
-        double total_moving_dist = 0.0;
-        
-        //Needs to be parallelized
-        #pragma omp parallel for num_threads(num_threads)
-        for (int c = 0; c < num_centroids; ++c) 
-        {
-            // Find all points assigned to this centroid and compute their mean
-            double sum_x = 0.0, sum_y = 0.0;
-            int count = 0;
-            
+            // Reset distance at the start of iteration
+            #pragma omp single
+            total_moving_dist = 0.0;
+
+            // Step 1: Assign points to centroids
+            #pragma omp for
             for (int p = 0; p < num_points; ++p) 
             {
-                if (assignments[p] == c) 
+                double min_dist = DBL_MAX;
+                int nearest_centroid = 0;
+                for (int c = 0; c < num_centroids; ++c) 
                 {
-                    sum_x += points_x[p];
-                    sum_y += points_y[p];
-                    count++;
+                    double dx = points_x[p] - centroids_x[c];
+                    double dy = points_y[p] - centroids_y[c];
+                    double dist = sqrt(dx*dx + dy*dy);
+                    if (dist < min_dist) 
+                    {
+                        min_dist = dist;
+                        nearest_centroid = c;
+                    }
+                }
+                assignments[p] = nearest_centroid;
+            }
+
+            // Step 2: Compute new locations
+            // We use reduction here to safely sum the distances across threads
+            #pragma omp for reduction(+:total_moving_dist)
+            for (int c = 0; c < num_centroids; ++c) 
+            {
+                double sum_x = 0.0, sum_y = 0.0;
+                int count = 0;
+                for (int p = 0; p < num_points; ++p) 
+                {
+                    if (assignments[p] == c) 
+                    {
+                        sum_x += points_x[p];
+                        sum_y += points_y[p];
+                        count++;
+                    }
+                }
+                
+                if (count > 0) 
+                {
+                    double new_x = sum_x / count;
+                    double new_y = sum_y / count;
+                    double dx = new_x - centroids_x[c];
+                    double dy = new_y - centroids_y[c];
+                    total_moving_dist += sqrt(dx*dx + dy*dy);
+
+                    centroids_x[c] = new_x;
+                    centroids_y[c] = new_y;
                 }
             }
-            
-            // Compute new centroid position (geometric center)
-            if (count > 0) 
+
+            // Step 3: Single thread checks convergence
+            #pragma omp single
             {
-                double new_x = sum_x / count;
-                double new_y = sum_y / count;
-                
-                // Compute moving distance from old position
-                double dx = new_x - centroids_x[c];
-                double dy = new_y - centroids_y[c];
-                double moving_dist = sqrt(dx*dx + dy*dy);
-                total_moving_dist += moving_dist;
-                
-                // Update centroid position
-                centroids_x[c] = new_x;
-                centroids_y[c] = new_y;
+                if ((total_moving_dist / num_centroids) <= 1.0) 
+                {
+                    converged = true;
+                }
             }
-        }
-        
-        // Step 3: Check convergence (average moving distance)
-        double avg_moving_dist = total_moving_dist / num_centroids;
-        if (avg_moving_dist <= 1.0) 
-        {
-            converged = true;
+            // Implicit barrier at the end of 'single' ensures all threads 
+            // see the updated 'converged' value before starting the next while loop iteration.
         }
     }
+
     
-    // Free assignment array
     free(assignments);
 
 
