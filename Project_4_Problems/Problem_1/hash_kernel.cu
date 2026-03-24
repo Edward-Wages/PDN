@@ -9,5 +9,14 @@ void hash_kernel(unsigned int* hash_array, unsigned int* nonce_array, unsigned i
     unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
 
     // TODO: Generate hash values
+    if (index < array_size)
+    {
+        unsigned int hash = (nonce_array[index] + transactions[0] * (index + 1)) % mod;
+        for (int i = 1; i < n_transactions; i++)
+        {
+            hash = (hash + transactions[i] * (index + 1)) % mod;
+        }
+        hash_array[index] = hash;
+    }
 
 } // End Hash Kernel //
