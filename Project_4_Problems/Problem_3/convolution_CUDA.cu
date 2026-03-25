@@ -10,8 +10,11 @@
 #include <cstdio>
 #include <cuda.h>
 
+#include "support.h"
 #include "kernel.cu"
 
+
+void read_file(char* file, unsigned int* transactions, unsigned int n_transactions);
 
 int main(int argc, char* argv[])
 {
@@ -97,9 +100,23 @@ int main(int argc, char* argv[])
     stopTime(&timer);
 
     //Write the output matrix & timing to the output files in csv format
-    write_file(argv[4], h_mat_output, n_row * n_col);
+    //Needs to be changed to fprintf
+    for (unsigned int i = 0; i < n_row; i++) 
+    {
+        for (unsigned int j = 0; j < n_col; j++) 
+        {
+            fprintf(output_file, "%u", h_mat_output[i * n_col + j]);
+            if (j < n_col - 1) 
+            {
+                fprintf(output_file, ",");
+            }
+        }
+        fprintf(output_file, "\n");
+    }
 
-    fprintf(time_file, "%f\n", elapsedTime(&timer));
+
+
+    fprintf(time_file, "%f\n", elapsedTime(timer));
 
     //Freeing up memory
     cudaFree(d_mat_input);
@@ -117,4 +134,24 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+/* Read File -------------------- //
+*   Reads in a file of transactions. 
+*/
+void read_file(char* file, unsigned int* transactions, unsigned int n_transactions) {
 
+    // open file
+    FILE* trans_file = fopen(file, "r");
+    if (trans_file == NULL)
+        fprintf(stderr, "ERROR: could not read the transaction file.\n"),
+        exit(-1);
+
+    // read items
+    char line[100] = { 0 };
+    for (int i = 0; i < n_transactions && fgets(line, 100, trans_file); ++i) {
+        char* p;
+        transactions[i] = strtof(line, &p);
+    }
+
+    fclose(trans_file);
+
+} // End Read File ------------- //
