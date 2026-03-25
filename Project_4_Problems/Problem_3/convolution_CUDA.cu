@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     // Catch console errors
     if (argc != 6)
     {
-        printf("USE LIKE THIS: convolution_CUDA_parallel n_row n_col mat_input.csv mat_output_prob3.csv time_prob3_CUDA.csv\n");
+        printf("USE LIKE THIS: convolution_CUDA n_row n_col mat_input.csv mat_output_prob3.csv time_prob3_CUDA.csv\n");
         return EXIT_FAILURE;
     }
 
@@ -55,6 +55,11 @@ int main(int argc, char* argv[])
     unsigned int* d_mat_input;
     cudaMalloc((void**)&d_mat_input, n_row * n_col * sizeof(unsigned int));
     cudaMemcpy(d_mat_input, mat_input, n_row * n_col * sizeof(unsigned int), cudaMemcpyHostToDevice);
+
+    stopTime(&timer);
+
+    float time_H2D = elapsedTime(timer); //Getting time for copying data from host to device
+
 
     //2.	Transfer the convolution filter (the K matrix) to the device memory
     //The convolution filter is a 5x5 matrix with the following values:
@@ -84,6 +89,9 @@ int main(int argc, char* argv[])
     // Calculate how many blocks we need to cover the whole image
     dim3 gridSize((n_col + blockSize.x - 1) / blockSize.x, (n_row + blockSize.y - 1) / blockSize.y);
 
+    startTime(&timer); //Restart timer for kernel execution
+
+
     convolution_kernel<<<gridSize, blockSize>>> (
         d_mat_input,
         d_mat_kernel,
@@ -92,12 +100,16 @@ int main(int argc, char* argv[])
         n_col
     );
     cudaDeviceSynchronize();
+    stopTime(&timer);
+    float time_Kernel = elapsedTime(timer); //Getting time for kernel execution
+
+    startTime(&timer); //Restart timer for device to host transfer
 
     //4.	Transfer the filter map (the B matrix) from the device memory to the system memory.
     unsigned int* h_mat_output = (unsigned int*)calloc(n_row * n_col, sizeof(unsigned int));
     cudaMemcpy(h_mat_output, d_mat_output, n_row * n_col * sizeof(unsigned int), cudaMemcpyDeviceToHost);
-
     stopTime(&timer);
+    float time_D2H = elapsedTime(timer); //Getting time for device to host transfer
 
     //Write the output matrix & timing to the output files in csv format
     //Needs to be changed to fprintf
@@ -116,7 +128,8 @@ int main(int argc, char* argv[])
 
 
 
-    fprintf(time_file, "%f\n", elapsedTime(timer));
+    fprintf(time_file, "%f\n%f\n%f\n", time_H2D, time_Kernel, time_D2H);
+
 
     //Freeing up memory
     cudaFree(d_mat_input);
@@ -139,19 +152,18 @@ int main(int argc, char* argv[])
 */
 void read_file(char* file, unsigned int* transactions, unsigned int n_transactions) {
 
-    // open file
-    FILE* trans_file = fopen(file, "r");
-    if (trans_file == NULL)
-        fprintf(stderr, "ERROR: could not read the transaction file.\n"),
-        exit(-1);
+    FILE* f = fopen(file, "r");
+    if (!f) exit(-1);
 
-    // read items
-    char line[100] = { 0 };
-    for (int i = 0; i < n_transactions && fgets(line, 100, trans_file); ++i) {
-        char* p;
-        transactions[i] = strtof(line, &p);
+    char line[65536]; // Big enough for a long CSV row
+    unsigned int i = 0;
+    while (fgets(line, sizeof(line), f) && i < n_transactions) {
+        char* token = strtok(line, ",");
+        while (token != NULL && i < n_transactions) {
+            transactions[i++] = (unsigned int)strtoul(token, NULL, 10);
+            token = strtok(NULL, ",");
+        }
     }
-
-    fclose(trans_file);
+    fclose(f);
 
 } // End Read File ------------- //
