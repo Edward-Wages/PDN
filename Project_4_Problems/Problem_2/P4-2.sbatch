@@ -15,12 +15,12 @@
 #
 # --------------------- Change the items below here! ---------------------
 #
-#SBATCH --mail-user=yourEmailHere@ou.edu
+#SBATCH --mail-user=Edward.J.Wages-1@ou.edu
 #SBATCH --mail-type=ALL
 #
-#SBATCH --chdir=/home/oucspdnxxx/ ... /Project_4/Problem_2
-#SBATCH --output=/home/oucspdnxxx/ ... /Project_4/Problem_2/_P4-2_%J_stdout.txt
-#SBATCH --error=/home/oucspdnxxx/ ... /Project_4/Problem_2/_P4-2_%J_stderr.txt
+#SBATCH --chdir=/home/oucspdn103/Wages_Edward_Project_4/Problem_2
+#SBATCH --output=/home/oucspdn103/Wages_Edward_Project_4/Problem_2/_P4-2_%J_stdout.txt
+#SBATCH --error=/home/oucspdn103/Wages_Edward_Project_4/Problem_2/_P4-2_%J_stderr.txt
 
 #################################################
 

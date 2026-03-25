@@ -145,6 +145,8 @@ int main(int argc, char* argv[]) {
     //        min_nonce = nonce_array[i];
     //    }
     //}
+
+    // DO THIS
     
 
 
