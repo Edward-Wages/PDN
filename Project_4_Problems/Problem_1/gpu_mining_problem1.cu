@@ -126,11 +126,6 @@ int main(int argc, char* argv[]) {
     cuda_ret = cudaMemcpy(nonce_array, device_nonce_array, trials * sizeof(unsigned int), cudaMemcpyDeviceToHost);
     err_check(cuda_ret, (char*)"Unable to copy nonces to host!", 9);
 
-    // Clean up device memory immediately after copying
-    cudaFree(device_transactions);
-    cudaFree(device_hash_array);
-    cudaFree(device_nonce_array);
-
     // Free host transactions since they are no longer needed
     free(transactions);
         
@@ -147,6 +142,31 @@ int main(int argc, char* argv[]) {
     //}
 
     // DO THIS
+
+    unsigned int* device_res_hash;
+    unsigned int* device_res_nonce;
+    cuda_ret = cudaMalloc((void**)&device_res_hash, sizeof(unsigned int));
+    cuda_ret = cudaMalloc((void**)&device_res_nonce, sizeof(unsigned int));
+
+    unsigned int init_max = 0xFFFFFFFF;
+    unsigned int init_nonce = 0;
+    cudaMemcpy(device_res_hash, &init_max, sizeof(unsigned int), cudaMemcpyHostToDevice);
+    cudaMemcpy(device_res_nonce, &init_nonce, sizeof(unsigned int), cudaMemcpyHostToDevice);
+
+    min_nonce_kernel <<< dimGrid, dimBlock >>> (
+        device_hash_array,   // input hash array
+        device_nonce_array,  // input nonce array
+        device_res_hash,    // output min hash
+        device_res_nonce,   // output min nonce
+        trials               // size of arrays
+    );
+
+    cuda_ret = cudaDeviceSynchronize();
+    err_check(cuda_ret, (char*)"Min nonce kernel failed!", 10);
+
+    unsigned int min_hash, min_nonce;
+    cudaMemcpy(&min_hash, device_res_hash, sizeof(unsigned int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(&min_nonce, device_res_nonce, sizeof(unsigned int), cudaMemcpyDeviceToHost);
     
 
 
@@ -173,9 +193,16 @@ int main(int argc, char* argv[]) {
     fprintf(output_file, "%s\n%u\n%u\n", res, min_hash, min_nonce);
     fprintf(time_file, "%f\n", elapsedTime(timer));
 
-    // Cleanup
+
     fclose(time_file);
     fclose(output_file);
+
+    
+    // Cleanup
+
+    cudaFree(device_res_hash);
+    cudaFree(device_res_nonce);
+    cudaFree(device_transactions);
 
     return 0;
 } // End Main -------------------------------------------- //

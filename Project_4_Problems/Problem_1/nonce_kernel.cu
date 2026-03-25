@@ -41,3 +41,46 @@ unsigned int random_kernel(unsigned int seed, unsigned int index) {
     return (unsigned int)(curand(&state));
 
 } // End Random Kernel //
+
+__global__ void min_nonce_kernel(unsigned int* g_hash, unsigned int* g_nonce, unsigned int* res_hash, unsigned int* res_nonce, unsigned int n)
+{
+    __shared__ unsigned int s_hash[1024];
+    __shared__ unsigned int s_nonce[1024];
+
+    unsigned int tid = threadIdx.x;
+    unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (i < n) 
+    {
+        s_hash[tid] = g_hash[i];
+        s_nonce[tid] = g_nonce[i];
+    } 
+    else 
+    {
+        s_hash[tid] = 0xFFFFFFFF; // Set to max value
+        s_nonce[tid] = 0;
+    }
+    __syncthreads();
+
+    for(unsigned int s = blockDim.x / 2; s > 0; s >>= 1)
+    {
+        if (tid < s) 
+        {
+            if (s_hash[tid + s] < s_hash[tid]) 
+            {
+                s_hash[tid] = s_hash[tid + s];
+                s_nonce[tid] = s_nonce[tid + s];
+            }
+        }
+        __syncthreads();
+    }
+
+    if(tid == 0)
+    {
+        unsigned int old_hash = atomicMin(res_hash, s_hash[0]);
+        if (old_hash > s_hash[0])
+        {
+            *res_nonce = s_nonce[0];
+        }
+    }
+}
