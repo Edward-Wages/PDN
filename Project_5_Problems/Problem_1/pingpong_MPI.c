@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 
     int n_items = strtol(argv[1], NULL, 10);
     int* ping_array = malloc(n_items * sizeof(int));
+    FILE* outputFile;
 
     if(my_rank == 0)
     {
@@ -32,7 +33,7 @@ int main(int argc, char* argv[])
             ping_array[i] = i;
         }
 
-        FILE* outputFile = fopen(argv[2], "w");
+        outputFile = fopen(argv[2], "w");
     }
 
     // Start time
