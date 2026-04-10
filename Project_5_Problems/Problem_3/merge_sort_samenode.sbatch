@@ -8,12 +8,12 @@
 #
 # --------------------- Change the items below here! ---------------------
 #
-#SBATCH --mail-user=yourEmailHere@ou.edu
+#SBATCH --mail-user=Edward.J.Wages-1@ou.edu
 #SBATCH --mail-type=ALL
 #
-#SBATCH --chdir=/home/oucspdnxxx/   ... /Project_5/Problem_3
-#SBATCH --output=/home/oucspdnxxx/  ... /Project_5/Problem_3/_P5-3_%J_stdout.txt
-#SBATCH --error=/home/oucspdnxxx/   ... /Project_5/Problem_3/_P5-3_%J_stderr.txt
+#SBATCH --chdir=/home/oucspdn103/   ... /Project_5/Problem_3
+#SBATCH --output=/home/oucspdn103/  ... /Project_5/Problem_3/_P5-3_%J_stdout.txt
+#SBATCH --error=/home/oucspdn103/   ... /Project_5/Problem_3/_P5-3_%J_stderr.txt
 
 #################################################
 

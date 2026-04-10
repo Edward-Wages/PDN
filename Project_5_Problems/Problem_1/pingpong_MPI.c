@@ -5,51 +5,66 @@
 #include <time.h>
 #include "mpi.h"
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) 
+{
+
+    MPI_Init(&argc, &argv);
+    int my_rank, comm_sz;
+
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
+    
     // Catch console errors
-    if (argc != 10)
+    if (argc != 3)
     {
         printf("USE LIKE THIS: pingpong_MPI n_items time_prob1_MPI.csv\n");
         return EXIT_FAILURE;
+        MPI_Finalize();
     }
 
-    /* Read in command line items */
     int n_items = strtol(argv[1], NULL, 10);
-    FILE* outputFile = fopen(argv[2], "w");
+    int* ping_array = malloc(n_items * sizeof(int));
 
-    /* Start up MPI */
-    int my_rank;
-    // TODO: finish setting up MPI
+    if(my_rank == 0)
+    {
+        for(int i = 0; i < n_items; i++)
+        {
+            ping_array[i] = i;
+        }
 
+        FILE* outputFile = fopen(argv[2], "w");
+    }
 
     // Start time
-    double starttime;
-    starttime = MPI_Wtime();
+    MPI_Barrier(MPI_COMM_WORLD); // Ensure all processes start at the same time
+    double starttime = MPI_Wtime();
 
 
+    for(int i = 0; i < 1000; i++)
+    {
+        if (my_rank == 0)
+        {
+            MPI_Send(ping_array, n_items, MPI_INT, 1, 0, MPI_COMM_WORLD);
+            MPI_Recv(ping_array, n_items, MPI_INT, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        }
+        else if (my_rank == 1)
+        {
+            MPI_Recv(ping_array, n_items, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(ping_array, n_items, MPI_INT, 0, 0, MPI_COMM_WORLD);
+        }
+    }
 
-
-    // TODO: Create your MPI program.
-    if (my_rank == 0) {
-    
-        // Fill array with incremental values
-        for (i = 0; i < n_items; i++)
-            ping_array[i] = i;
-
-        // TODO: if myrank is 0
-
-
-
-        // End time
+    if(my_rank == 0)
+    {
         double endtime = MPI_Wtime();
-        // TODO: output
-    }
-    else {
-
-        // TODO: if my rank not 0
-
+        double total_time = endtime - starttime;
+        fprintf(outputFile, "%d, %f\n", n_items, total_time);
     }
 
+    free(ping_array);
+    fclose(outputFile);
+
+    MPI_Finalize();
     return 0;
 } /* main */
 
