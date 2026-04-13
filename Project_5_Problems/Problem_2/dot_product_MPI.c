@@ -21,16 +21,6 @@ int main (int argc, char *argv[])
     // Size
     int vec_size = strtol(argv[1], NULL, 10);
 
-    // Input files
-    FILE* inputFile1 = fopen(argv[2], "r");
-    FILE* inputFile2 = fopen(argv[3], "r");
-    if (inputFile1 == NULL) printf("Could not open file %s", argv[2]);
-    if (inputFile2 == NULL) printf("Could not open file %s",argv[3]);
-
-    // Output files
-    FILE* outputFile = fopen(argv[4], "w");
-    FILE* timeFile = fopen(argv[5], "w");
-
     //Start MPI
     int my_rank, comm_size;
     MPI_Init(&argc, &argv);
@@ -40,9 +30,25 @@ int main (int argc, char *argv[])
     double* vec_1 = NULL;
     double* vec_2 = NULL;
 
-    //Process 0 reads in the input arrays & handles allocation of arrays
+    FILE* inputFile1;
+    FILE* inputFile2;
+    FILE* outputFile;
+    FILE* timeFile;
+
+    //Process 0 reads in the input arrays, opens the files, & handles allocation of arrays
     if(my_rank == 0)
     {
+
+        // Input files
+        inputFile1 = fopen(argv[2], "r");
+        inputFile2 = fopen(argv[3], "r");
+        if (inputFile1 == NULL) printf("Could not open file %s", argv[2]);
+        if (inputFile2 == NULL) printf("Could not open file %s",argv[3]);
+
+        // Output files
+        outputFile = fopen(argv[4], "w");
+        timeFile = fopen(argv[5], "w");
+
         vec_1 = malloc(vec_size * sizeof(double));
         vec_2 = malloc(vec_size * sizeof(double));
 
@@ -103,14 +109,15 @@ int main (int argc, char *argv[])
         printf("DP in C: %lf\n", global_dot_product);
         fprintf(outputFile, "%lf", global_dot_product);
         fprintf(timeFile, "%.20f", elapsed);
+
+        fclose (outputFile);
+        fclose (timeFile);
+
+        free(vec_1);
+        free(vec_2);
     }
 
     // Cleanup
-    fclose (outputFile);
-    fclose (timeFile);
-
-    free(vec_1);
-    free(vec_2);
     free(local_vec);
     free(local_vec2);
 

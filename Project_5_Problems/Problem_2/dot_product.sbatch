@@ -12,9 +12,9 @@
 #
 #SBATCH --job-name=hw5prob2
 #
-#SBATCH --chdir=/home/oucspdn103/  ... /Project_5/Problem_2
-#SBATCH --output=/home/oucspdn103/ ... /Project_5/Problem_2/_P5-2_%J_stdout.txt
-#SBATCH --error=/home/oucspdn103/  ... /Project_5/Problem_2/_P5-2_%J_stderr.txt
+#SBATCH --chdir=/home/oucspdn103/Wages_Edward_Project_5/Problem_2
+#SBATCH --output=/home/oucspdn103/Wages_Edward_Project_5/Problem_2/_P5-2_%J_stdout.txt
+#SBATCH --error=/home/oucspdn103/Wages_Edward_Project_5/Problem_2/_P5-2_%J_stderr.txt
 #
 #################################################
 
@@ -25,5 +25,18 @@ echo ""
 module load intel/2022.2
 module load OpenMPI/4.1.4-GCC-11.3.0
 
+make clean
+make
+
 mpirun -n 2 ./dot_product_MPI 262144 vec1_2_18.csv vec2_2_18.csv result_2p_18.csv time_2p_18.csv
+mpirun -n 2 ./dot_product_MPI 524288 vec1_2_19.csv vec2_2_19.csv result_2p_19.csv time_2p_19.csv
+mpirun -n 2 ./dot_product_MPI 1048576 vec1_2_20.csv vec2_2_20.csv result_2p_20.csv time_2p_20.csv
+
+mpirun -n 4 ./dot_product_MPI 262144 vec1_2_18.csv vec2_2_18.csv result_4p_18.csv time_4p_18.csv
+mpirun -n 4 ./dot_product_MPI 524288 vec1_2_19.csv vec2_2_19.csv result_4p_19.csv time_4p_19.csv
+mpirun -n 4 ./dot_product_MPI 1048576 vec1_2_20.csv vec2_2_20.csv result_4p_20.csv time_4p_20.csv
+
+mpirun -n 8 ./dot_product_MPI 262144 vec1_2_18.csv vec2_2_18.csv result_8p_18.csv time_8p_18.csv
+mpirun -n 8 ./dot_product_MPI 524288 vec1_2_19.csv vec2_2_19.csv result_8p_19.csv time_8p_19.csv
+mpirun -n 8 ./dot_product_MPI 1048576 vec1_2_20.csv vec2_2_20.csv result_8p_20.csv time_8p_20.csv
 # add for other sizes
