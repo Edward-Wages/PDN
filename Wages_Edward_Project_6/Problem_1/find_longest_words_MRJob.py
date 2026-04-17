@@ -14,12 +14,13 @@ from pyparsing import line
 
 # Program is ran like so: python find_longest_words_MRJob.py 1342-0.txt
 
-WORD_RE = re.compile(r"[\w']+")
+WORD_RE = re.compile(r"[a-zA-Z]+")
+
 
 class MRLongestWord(MRJob):
 
     def mapper(self, _, line):
-        words = line.strip().split() 
+        words = WORD_RE.findall(line)
         for word in words:
             # process each word. Yields the first letter and the word itself
             yield word[0].lower(), word.lower()
