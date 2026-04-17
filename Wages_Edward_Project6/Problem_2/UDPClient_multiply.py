@@ -29,6 +29,6 @@ clientSocket.sendto(messageBytes, serverAddress)
 modifiedMessageBytes, serverAddress = clientSocket.recvfrom(2048)
 modifiedMessage = modifiedMessageBytes.decode("utf-8")
 serverIP, serverPort = serverAddress
-print("Multiplication Result from {serverIP}:{ServerPort} = {modifiedMessage}")
+print(f"Multiplication Result from {serverIP}:{serverPort} = {modifiedMessage}")
 
 clientSocket.close()

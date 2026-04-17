@@ -18,26 +18,31 @@ serverAddress = (serverIP, serverPort)
 serverSocket.bind(serverAddress)
 print("Server has successfully been connected")
 
+#Start the operation
 while True:
-    #Recieving byte string - 2048 is the length of the messag 
+    #Recieving byte string - 1024 is the length of the message
     messageBytes, clientAddress = serverSocket.recvfrom(2048)
     clientIP, clientPort = clientAddress
 
-    message = messageBytes.decode("utf-8") 
+    #recieve a byte from the socket
+    try:
+        message = messageBytes.decode("utf-8")
 
+        nums = [n.strip() for n in message.split(',') if n.strip()]
 
-    #Split the message into the numbers
-    nums = message.split(',')
+        if not nums:
+            response = "Invalid input"
+        else:
+            result = 1
+            for num in nums:
+                result *= int(num)
+            response = str(result)
 
-    #Perform the multiplication
-    if(nums.__len__ == 0):
-        result = 0
-    else:
-        result = 1
-        for num in nums:
-            result = result * int(num)
+    except ValueError:
+        response = "Invalid input"
+    except Exception as e:
+        response = "Invalid input"
 
-    modifiedMessage = '{result}' #Does this work?
 
     #Send result back
-    serverSocket.sendto(modifiedMessage.encode("utf-8"), clientAddress)
+    serverSocket.sendto(response.encode("utf-8"), clientAddress)
