@@ -12,9 +12,9 @@ from pyparsing import line
 #"g" ["gentlemanlike", "gratification"]
 #"h" ["hertfordshire", "healthfulness"]
 
-# Program is ran like so: python find_longest_words_MRJob.py 1342-0.txt
+#Program is ran like so: python find_longest_words_MRJob.py 1342-0.txt
 
-WORD_RE = re.compile(r"[a-zA-Z]+")
+WORD_RE = re.compile(r"[a-zA-Z]+") #Only grabbing letters to avoid special characters & numbers
 
 
 class MRLongestWord(MRJob):
@@ -22,23 +22,23 @@ class MRLongestWord(MRJob):
     def mapper(self, _, line):
         words = WORD_RE.findall(line)
         for word in words:
-            # process each word. Yields the first letter and the word itself
+            #Process each word. Yields the first letter and the word itself. Make the words lowercase for easier processing
             yield word[0].lower(), word.lower()
 
     
     def reducer(self, letter, words):
         max_length = 0
-        longest_words = set()  # Use a set to avoid duplicates
+        longest_words = set()  #Use a set to avoid duplicates
 
         for w in words:
             length = len(w)
             if length > max_length:
                 max_length = length
-                longest_words = {w}  # Start a new set with the current longest word
+                longest_words = {w}  #Start a new set with the current longest word
             elif length == max_length:
-                longest_words.add(w)  # Add to the set of longest words
+                longest_words.add(w)  #Add to the set of longest words
 
-        # Yield the letters and the longest words for each letter found
+        #Yield the letters and the longest words for each letter found
         yield letter, list(longest_words)
 
 if __name__ == '__main__':
